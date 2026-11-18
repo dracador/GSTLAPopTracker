@@ -1,4 +1,3 @@
-
 require("scripts/autotracking/item_mapping")
 require("scripts/autotracking/location_mapping")
 require("scripts/autotracking/hints_mapping")
@@ -14,6 +13,11 @@ CUR_INDEX = -1
 
 
 SLOT_DATA = {}
+OWNED_DJINN = {}
+
+for ap_id, flag in pairs(DJINN_FLAG_BY_AP_ID) do
+    LOCATION_MAPPING[ap_id] = {DJINN_MAPPING[flag]}
+end
 
 function has_value (t, val)
     for i, v in ipairs(t) do
@@ -96,6 +100,7 @@ end
 function onClear(slot_data)
     --SLOT_DATA = slot_data
     CUR_INDEX = -1
+    OWNED_DJINN = {}
     -- reset locations
     for _, location_array in pairs(LOCATION_MAPPING) do
         for _, location in pairs(location_array) do
@@ -205,6 +210,11 @@ function onItem(index, item_id, item_name, player_number)
     end
     local is_local = player_number == Archipelago.PlayerNumber
     CUR_INDEX = index;
+    local djinn_flag = DJINN_FLAG_BY_AP_ID[item_id]
+    if djinn_flag then
+        addOwnedDjinnList({djinn_flag})
+        return
+    end
     local item = ITEM_MAPPING[item_id]
     if not item or not item[1] then
         --print(string.format("onItem: could not find item mapping for id %s", item_id))
@@ -308,7 +318,7 @@ function onNotify(key, value, old_value)
         end
         if key == OWNED_DJINN_ID then
             -- updateSingleDjinnCount(value[#value])
-            updateDjinnDiff(value, old_value)
+            addOwnedDjinnList(value)
         end
         if key == EVENT_ID then
             updateProgression(value)
@@ -329,7 +339,7 @@ function onNotifyLaunch(key, value)
             updateDjinnLocations(value)
         end
         if key == OWNED_DJINN_ID then
-            updateDjinnCount(value)
+            addOwnedDjinnList(value)
         end
         if key == EVENT_ID then
             updateProgression(value)
@@ -351,44 +361,23 @@ function updateDjinnLocations(value)
 	end
 end
 
-function updateSingleDjinnCount(value)
-    local djinn = DJINN_MAPPING[value]
-	local splitIndex = string.find(djinn, "_")
-	local code = string.sub(djinn, 1, splitIndex-1)
-	local obj = Tracker:FindObjectForCode(code)
+function addOwnedDjinn(flag)
+    local djinn = DJINN_MAPPING[flag]
+    if OWNED_DJINN[flag] or not djinn then
+        return
+    end
+    OWNED_DJINN[flag] = true
+    local splitIndex = string.find(djinn, "_")
+    local code = string.sub(djinn, 1, splitIndex-1)
+    local obj = Tracker:FindObjectForCode(code)
     obj.AcquiredCount = obj.AcquiredCount + 1
-    updateTotalDjinnCount()
 end
 
-function updateDjinnDiff(value, oldvalue)
-    print("Update Djinn Diff")
-    print("New")
-    print(dump_table(value))
-    print("Old")
-    print(dump_table(oldvalue))
-    for idx, newid in pairs(value) do
-        if value[idx] ~= oldvalue[idx] then
-            print("Update new Djinn ID " .. newid)
-            local djinn = DJINN_MAPPING[newid]
-            local splitIndex = string.find(djinn, "_")
-            local code = string.sub(djinn, 1, splitIndex-1)
-            local obj = Tracker:FindObjectForCode(code)
-            obj.AcquiredCount = obj.AcquiredCount + 1
-        end
+function addOwnedDjinnList(flags)
+    for _, flag in pairs(flags) do
+        addOwnedDjinn(flag)
     end
     updateTotalDjinnCount()
-end
-
-function updateDjinnCount(value)
-    print("Update Djinn Counts")
-	for _, id in pairs(value) do
-	    local djinn = DJINN_MAPPING[id]
-	    local splitIndex = string.find(djinn, "_")
-	    local code = string.sub(djinn, 1, splitIndex-1)
-		local obj = Tracker:FindObjectForCode(code)
-        obj.AcquiredCount = obj.AcquiredCount + 1
-	end
-	updateTotalDjinnCount()
 end
 
 function updateProgression(value)

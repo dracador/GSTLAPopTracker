@@ -72,3 +72,17 @@ DJINN_MAPPING = {
     [124] = "jupiter_8",
     [125] = "jupiter_6"
 }
+
+DJINN_AP_ID_START = 16384000
+DJINN_FLAG_START = 48
+DJINN_FLAGS_PER_ELEMENT = 20
+DJINN_PER_ELEMENT = 18
+DJINN_FLAG_BY_AP_ID = {}
+
+for flag, _ in pairs(DJINN_MAPPING) do
+    local offset = flag - DJINN_FLAG_START
+    local element = offset // DJINN_FLAGS_PER_ELEMENT
+    local index = offset % DJINN_FLAGS_PER_ELEMENT
+    local ap_id = DJINN_AP_ID_START + 2 * (element * DJINN_PER_ELEMENT + index)
+    DJINN_FLAG_BY_AP_ID[ap_id] = flag
+end
