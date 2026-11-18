@@ -221,7 +221,7 @@ function onItem(index, item_id, item_name, player_number)
             item_obj.Active = true
         elseif item_obj.Type == "consumable" then
             -- print("consumable")
-            item_obj.AcquiredCount = item_obj.AcquiredCount + item_obj.Increment * (tonumber(item_pair[3]) or 1)
+            item_obj.AcquiredCount = item_obj.AcquiredCount + item_obj.Increment * (tonumber(item[3]) or 1)
         elseif item_obj.Type == "progressive_toggle" then
             -- print("progressive_toggle")
             if item_obj.Active then
@@ -231,7 +231,7 @@ function onItem(index, item_id, item_name, player_number)
             end
         end
     else
-        print(string.format("onItem: could not find object for code %s", item_code[1]))
+        print(string.format("onItem: could not find object for code %s", item[1]))
     end
 end
 
